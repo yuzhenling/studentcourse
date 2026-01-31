@@ -2,7 +2,7 @@
 
 ## 项目结构
 
-- **studentcourse**：后端（Java 25 + Spring Boot 4 + MyBatis + PostgreSQL）
+- **studentcourse**：后端（Java 21 + Spring Boot 4 + MyBatis + PostgreSQL）
 - **studentcourseweb**：前端（Vite + React 18 + Ant Design + React Router + axios）
 
 ## 已完成模块
