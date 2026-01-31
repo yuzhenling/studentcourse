@@ -79,4 +79,16 @@ npm run dev
 - 学期管理 CRUD、选课时间段校验
 - 操作日志审计
 
-有不明之处可随时问我。
+
+
+![说明](./images/a1.png)
+![说明](./images/a2.png)
+![说明](./images/a3.png)
+![说明](./images/a4.png)
+![说明](./images/t1.png)
+![说明](./images/t2.png)
+![说明](./images/t3.png)
+![说明](./images/s1.png)
+![说明](./images/s2.png)
+![说明](./images/s3.png)
+![说明](./images/s4.png)
