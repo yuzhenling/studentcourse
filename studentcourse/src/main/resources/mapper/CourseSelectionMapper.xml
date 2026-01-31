@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.upper6.studentcourse.mapper.CourseSelectionMapper">
+
+    <resultMap id="BaseResultMap" type="com.upper6.studentcourse.model.entity.CourseSelection">
+        <id column="id" property="id"/>
+        <result column="student_id" property="studentId"/>
+        <result column="course_id" property="courseId"/>
+        <result column="semester" property="semester"/>
+        <result column="selection_date" property="selectionDate"/>
+        <result column="selection_type" property="selectionType"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="student_name" property="studentName"/>
+        <result column="course_name" property="courseName"/>
+        <result column="course_code" property="courseCode"/>
+    </resultMap>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT cs.*, s.name AS student_name, c.course_name, c.course_code
+        FROM course_selections cs
+        LEFT JOIN students s ON cs.student_id = s.id
+        LEFT JOIN courses c ON cs.course_id = c.id
+        WHERE cs.id = #{id}
+    </select>
+
+    <select id="selectByStudentAndCourseAndSemester" resultMap="BaseResultMap">
+        SELECT id, student_id, course_id, semester, selection_date, selection_type, status, created_at, updated_at
+        FROM course_selections WHERE student_id = #{studentId} AND course_id = #{courseId} AND semester = #{semester}
+    </select>
+
+    <select id="selectByStudent" resultMap="BaseResultMap">
+        SELECT cs.*, c.course_name, c.course_code
+        FROM course_selections cs LEFT JOIN courses c ON cs.course_id = c.id
+        WHERE cs.student_id = #{studentId}
+        <if test="semester != null and semester != ''">AND cs.semester = #{semester}</if>
+        AND cs.status = 'SELECTED'
+        ORDER BY cs.id DESC
+    </select>
+
+    <sql id="Page_Where">
+        <where>
+            <if test="studentId != null">AND cs.student_id = #{studentId}</if>
+            <if test="courseId != null">AND cs.course_id = #{courseId}</if>
+            <if test="semester != null and semester != ''">AND cs.semester = #{semester}</if>
+            <if test="status != null and status != ''">AND cs.status = #{status}</if>
+        </where>
+    </sql>
+
+    <select id="selectPage" resultMap="BaseResultMap">
+        SELECT cs.*, s.name AS student_name, c.course_name, c.course_code
+        FROM course_selections cs
+        LEFT JOIN students s ON cs.student_id = s.id
+        LEFT JOIN courses c ON cs.course_id = c.id
+        <include refid="Page_Where"/>
+        ORDER BY cs.id DESC LIMIT #{param.size} OFFSET #{param.offset}
+    </select>
+    <select id="countPage" resultType="long">
+        SELECT COUNT(*) FROM course_selections cs <include refid="Page_Where"/>
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO course_selections (student_id, course_id, semester, selection_type, status)
+        VALUES (#{studentId}, #{courseId}, #{semester}, #{selectionType}, #{status})
+    </insert>
+
+    <update id="updateStatus">
+        UPDATE course_selections SET status = #{status}, updated_at = CURRENT_TIMESTAMP WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">DELETE FROM course_selections WHERE id = #{id}</delete>
+</mapper>

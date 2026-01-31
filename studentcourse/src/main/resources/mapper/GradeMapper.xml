@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.upper6.studentcourse.mapper.GradeMapper">
+
+    <resultMap id="BaseResultMap" type="com.upper6.studentcourse.model.entity.Grade">
+        <id column="id" property="id"/>
+        <result column="selection_id" property="selectionId"/>
+        <result column="regular_score" property="regularScore"/>
+        <result column="midterm_score" property="midtermScore"/>
+        <result column="final_score" property="finalScore"/>
+        <result column="total_score" property="totalScore"/>
+        <result column="grade_point" property="gradePoint"/>
+        <result column="letter_grade" property="letterGrade"/>
+        <result column="is_passed" property="isPassed"/>
+        <result column="teacher_comment" property="teacherComment"/>
+        <result column="published" property="published"/>
+        <result column="published_date" property="publishedDate"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="student_name" property="studentName"/>
+        <result column="course_name" property="courseName"/>
+        <result column="course_code" property="courseCode"/>
+    </resultMap>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT g.*, s.name AS student_name, c.course_name, c.course_code
+        FROM grades g
+        LEFT JOIN course_selections cs ON g.selection_id = cs.id
+        LEFT JOIN students s ON cs.student_id = s.id
+        LEFT JOIN courses c ON cs.course_id = c.id
+        WHERE g.id = #{id}
+    </select>
+    <select id="selectBySelectionId" resultMap="BaseResultMap">
+        SELECT id, selection_id, regular_score, midterm_score, final_score, total_score, grade_point, letter_grade, is_passed, teacher_comment, published, published_date, created_at, updated_at
+        FROM grades WHERE selection_id = #{selectionId}
+    </select>
+
+    <select id="selectByStudent" resultMap="BaseResultMap">
+        SELECT g.*, c.course_name, c.course_code
+        FROM grades g
+        JOIN course_selections cs ON g.selection_id = cs.id AND cs.student_id = #{studentId}
+        LEFT JOIN courses c ON cs.course_id = c.id
+        WHERE g.published = TRUE
+        <if test="semester != null and semester != ''">AND cs.semester = #{semester}</if>
+        ORDER BY g.id DESC
+    </select>
+
+    <sql id="Page_Where">
+        <where>
+            <if test="studentId != null">AND cs.student_id = #{studentId}</if>
+            <if test="courseId != null">AND cs.course_id = #{courseId}</if>
+            <if test="semester != null and semester != ''">AND cs.semester = #{semester}</if>
+            <if test="published != null">AND g.published = #{published}</if>
+        </where>
+    </sql>
+
+    <select id="selectPage" resultMap="BaseResultMap">
+        SELECT g.*, s.name AS student_name, c.course_name, c.course_code
+        FROM grades g
+        JOIN course_selections cs ON g.selection_id = cs.id
+        LEFT JOIN students s ON cs.student_id = s.id
+        LEFT JOIN courses c ON cs.course_id = c.id
+        <include refid="Page_Where"/>
+        ORDER BY g.id DESC LIMIT #{param.size} OFFSET #{param.offset}
+    </select>
+    <select id="countPage" resultType="long">
+        SELECT COUNT(*) FROM grades g JOIN course_selections cs ON g.selection_id = cs.id
+        <include refid="Page_Where"/>
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO grades (selection_id, regular_score, midterm_score, final_score, total_score, grade_point, letter_grade, is_passed, teacher_comment, published)
+        VALUES (#{selectionId}, #{regularScore}, #{midtermScore}, #{finalScore}, #{totalScore}, #{gradePoint}, #{letterGrade}, #{isPassed}, #{teacherComment}, FALSE)
+    </insert>
+
+    <update id="updateById">
+        UPDATE grades SET selection_id=#{selectionId}, regular_score=#{regularScore}, midterm_score=#{midtermScore},
+        final_score=#{finalScore}, total_score=#{totalScore}, grade_point=#{gradePoint}, letter_grade=#{letterGrade},
+        is_passed=#{isPassed}, teacher_comment=#{teacherComment}, updated_at=CURRENT_TIMESTAMP WHERE id=#{id}
+    </update>
+
+    <update id="updatePublished">
+        UPDATE grades SET published = #{published}, published_date = CASE WHEN #{published} THEN CURRENT_TIMESTAMP ELSE NULL END, updated_at = CURRENT_TIMESTAMP WHERE id = #{id}
+    </update>
+</mapper>

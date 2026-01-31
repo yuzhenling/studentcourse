@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.upper6.studentcourse.mapper.ClassMapper">
+
+    <resultMap id="BaseResultMap" type="com.upper6.studentcourse.model.entity.ClassEntity">
+        <id column="id" property="id"/>
+        <result column="class_name" property="className"/>
+        <result column="major" property="major"/>
+        <result column="enrollment_year" property="enrollmentYear"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, class_name, major, enrollment_year, created_at, updated_at
+    </sql>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/> FROM classes ORDER BY enrollment_year DESC, class_name
+    </select>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/> FROM classes WHERE id = #{id}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO classes (class_name, major, enrollment_year)
+        VALUES (#{className}, #{major}, #{enrollmentYear})
+    </insert>
+
+    <update id="updateById">
+        UPDATE classes SET class_name = #{className}, major = #{major}, enrollment_year = #{enrollmentYear}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">DELETE FROM classes WHERE id = #{id}</delete>
+</mapper>

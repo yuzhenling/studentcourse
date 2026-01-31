@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.upper6.studentcourse.mapper.TeacherMapper">
+
+    <resultMap id="BaseResultMap" type="com.upper6.studentcourse.model.entity.Teacher">
+        <id column="id" property="id"/>
+        <result column="teacher_id" property="teacherId"/>
+        <result column="name" property="name"/>
+        <result column="title" property="title"/>
+        <result column="department" property="department"/>
+        <result column="email" property="email"/>
+        <result column="phone" property="phone"/>
+        <result column="office" property="office"/>
+        <result column="research_field" property="researchField"/>
+        <result column="password_hash" property="passwordHash"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, teacher_id, name, title, department, email, phone, office, research_field, status, created_at, updated_at
+    </sql>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/> FROM teachers WHERE id = #{id}
+    </select>
+    <select id="selectByTeacherId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/> FROM teachers WHERE teacher_id = #{teacherId}
+    </select>
+    <select id="selectByTeacherIdWithPassword" resultMap="BaseResultMap">
+        SELECT id, teacher_id, name, title, department, email, phone, office, research_field, password_hash, status, created_at, updated_at
+        FROM teachers WHERE teacher_id = #{teacherId}
+    </select>
+
+    <sql id="Page_Where">
+        <where>
+            <if test="teacherId != null and teacherId != ''">AND teacher_id LIKE '%' || #{teacherId} || '%'</if>
+            <if test="name != null and name != ''">AND name LIKE '%' || #{name} || '%'</if>
+            <if test="department != null and department != ''">AND department LIKE '%' || #{department} || '%'</if>
+            <if test="status != null and status != ''">AND status = #{status}</if>
+        </where>
+    </sql>
+
+    <select id="selectPage" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/> FROM teachers
+        <include refid="Page_Where"/>
+        ORDER BY id DESC LIMIT #{param.size} OFFSET #{param.offset}
+    </select>
+    <select id="countPage" resultType="long">
+        SELECT COUNT(*) FROM teachers <include refid="Page_Where"/>
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO teachers (teacher_id, name, title, department, email, phone, office, research_field, password_hash, status)
+        VALUES (#{teacherId}, #{name}, #{title}, #{department}, #{email}, #{phone}, #{office}, #{researchField}, #{passwordHash}, #{status})
+    </insert>
+    <update id="updateById">
+        UPDATE teachers SET teacher_id=#{teacherId}, name=#{name}, title=#{title}, department=#{department},
+        email=#{email}, phone=#{phone}, office=#{office}, research_field=#{researchField}, status=#{status}, updated_at=CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+    <update id="updatePassword">
+        UPDATE teachers SET password_hash = #{passwordHash}, updated_at = CURRENT_TIMESTAMP WHERE id = #{id}
+    </update>
+    <delete id="deleteById">DELETE FROM teachers WHERE id = #{id}</delete>
+</mapper>

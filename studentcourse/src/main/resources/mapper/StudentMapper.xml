@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.upper6.studentcourse.mapper.StudentMapper">
+
+    <resultMap id="BaseResultMap" type="com.upper6.studentcourse.model.entity.Student">
+        <id column="id" property="id"/>
+        <result column="student_id" property="studentId"/>
+        <result column="name" property="name"/>
+        <result column="gender" property="gender"/>
+        <result column="birth_date" property="birthDate"/>
+        <result column="email" property="email"/>
+        <result column="phone" property="phone"/>
+        <result column="major" property="major"/>
+        <result column="enrollment_year" property="enrollmentYear"/>
+        <result column="class_id" property="classId"/>
+        <result column="class_name" property="className"/>
+        <result column="password_hash" property="passwordHash"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        s.id, s.student_id, s.name, s.gender, s.birth_date, s.email, s.phone, s.major, s.enrollment_year, s.class_id, s.status, s.created_at, s.updated_at
+    </sql>
+    <sql id="Class_Name_Column">c.class_name</sql>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>, <include refid="Class_Name_Column"/>
+        FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.id = #{id}
+    </select>
+
+    <select id="selectByStudentId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>, <include refid="Class_Name_Column"/>
+        FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_id = #{studentId}
+    </select>
+
+    <select id="selectByStudentIdWithPassword" resultMap="BaseResultMap">
+        SELECT s.id, s.student_id, s.name, s.gender, s.birth_date, s.email, s.phone, s.major, s.enrollment_year, s.class_id, s.password_hash, s.status, s.created_at, s.updated_at, c.class_name
+        FROM students s LEFT JOIN classes c ON s.class_id = c.id WHERE s.student_id = #{studentId}
+    </select>
+
+    <sql id="Page_Where">
+        <where>
+            <if test="studentId != null and studentId != ''">
+                AND s.student_id LIKE '%' || #{studentId} || '%'
+            </if>
+            <if test="name != null and name != ''">
+                AND s.name LIKE '%' || #{name} || '%'
+            </if>
+            <if test="major != null and major != ''">
+                AND s.major LIKE '%' || #{major} || '%'
+            </if>
+            <if test="status != null and status != ''">
+                AND s.status = #{status}
+            </if>
+        </where>
+    </sql>
+
+    <select id="selectPage" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>, <include refid="Class_Name_Column"/>
+        FROM students s LEFT JOIN classes c ON s.class_id = c.id
+        <include refid="Page_Where"/>
+        ORDER BY s.id DESC
+        LIMIT #{param.size} OFFSET #{param.offset}
+    </select>
+
+    <select id="countPage" resultType="long">
+        SELECT COUNT(*) FROM students s
+        <include refid="Page_Where"/>
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO students (student_id, name, gender, birth_date, email, phone, major, enrollment_year, class_id, password_hash, status)
+        VALUES (#{studentId}, #{name}, #{gender}, #{birthDate}, #{email}, #{phone}, #{major}, #{enrollmentYear}, #{classId}, #{passwordHash}, #{status})
+    </insert>
+
+    <update id="updateById">
+        UPDATE students SET
+            student_id = #{studentId},
+            name = #{name},
+            gender = #{gender},
+            birth_date = #{birthDate},
+            email = #{email},
+            phone = #{phone},
+            major = #{major},
+            enrollment_year = #{enrollmentYear},
+            class_id = #{classId},
+            status = #{status},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+    </update>
+
+    <update id="updatePassword">
+        UPDATE students SET password_hash = #{passwordHash}, updated_at = CURRENT_TIMESTAMP WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM students WHERE id = #{id}
+    </delete>
+</mapper>

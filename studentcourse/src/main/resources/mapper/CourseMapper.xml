@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.upper6.studentcourse.mapper.CourseMapper">
+
+    <resultMap id="BaseResultMap" type="com.upper6.studentcourse.model.entity.Course">
+        <id column="id" property="id"/>
+        <result column="course_code" property="courseCode"/>
+        <result column="course_name" property="courseName"/>
+        <result column="credits" property="credits"/>
+        <result column="course_hours" property="courseHours"/>
+        <result column="course_type" property="courseType"/>
+        <result column="description" property="description"/>
+        <result column="max_capacity" property="maxCapacity"/>
+        <result column="current_enrollment" property="currentEnrollment"/>
+        <result column="semester" property="semester"/>
+        <result column="year" property="year"/>
+        <result column="teacher_id" property="teacherId"/>
+        <result column="schedule_info" property="scheduleInfo"/>
+        <result column="status" property="status"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="teacher_name" property="teacherName"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        c.id, c.course_code, c.course_name, c.credits, c.course_hours, c.course_type, c.description,
+        c.max_capacity, c.current_enrollment, c.semester, c.year, c.teacher_id, c.schedule_info, c.status,
+        c.created_at, c.updated_at
+    </sql>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>, t.name AS teacher_name
+        FROM courses c LEFT JOIN teachers t ON c.teacher_id = t.id
+        WHERE c.id = #{id}
+    </select>
+
+    <select id="selectByCourseCode" resultMap="BaseResultMap">
+        SELECT id, course_code, course_name, credits, course_hours, course_type, description,
+               max_capacity, current_enrollment, semester, year, teacher_id, schedule_info, status, created_at, updated_at
+        FROM courses WHERE course_code = #{courseCode} AND (semester = #{semester} OR (#{semester} IS NULL AND semester IS NULL))
+    </select>
+
+    <sql id="Page_Where">
+        <where>
+            <if test="courseCode != null and courseCode != ''">AND c.course_code LIKE '%' || #{courseCode} || '%'</if>
+            <if test="courseName != null and courseName != ''">AND c.course_name LIKE '%' || #{courseName} || '%'</if>
+            <if test="semester != null and semester != ''">AND c.semester = #{semester}</if>
+            <if test="teacherId != null">AND c.teacher_id = #{teacherId}</if>
+            <if test="status != null and status != ''">AND c.status = #{status}</if>
+        </where>
+    </sql>
+
+    <select id="selectPage" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>, t.name AS teacher_name
+        FROM courses c LEFT JOIN teachers t ON c.teacher_id = t.id
+        <include refid="Page_Where"/>
+        ORDER BY c.id DESC LIMIT #{param.size} OFFSET #{param.offset}
+    </select>
+    <select id="countPage" resultType="long">
+        SELECT COUNT(*) FROM courses c <include refid="Page_Where"/>
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO courses (course_code, course_name, credits, course_hours, course_type, description, max_capacity, current_enrollment, semester, year, teacher_id, schedule_info, status)
+        VALUES (#{courseCode}, #{courseName}, #{credits}, #{courseHours}, #{courseType}, #{description}, #{maxCapacity}, 0, #{semester}, #{year}, #{teacherId}, #{scheduleInfo}, #{status})
+    </insert>
+
+    <update id="updateById">
+        UPDATE courses SET course_code=#{courseCode}, course_name=#{courseName}, credits=#{credits}, course_hours=#{courseHours},
+        course_type=#{courseType}, description=#{description}, max_capacity=#{maxCapacity}, semester=#{semester}, year=#{year},
+        teacher_id=#{teacherId}, schedule_info=#{scheduleInfo}, status=#{status}, updated_at=CURRENT_TIMESTAMP WHERE id=#{id}
+    </update>
+
+    <delete id="deleteById">DELETE FROM courses WHERE id = #{id}</delete>
+
+    <update id="updateCurrentEnrollment">
+        UPDATE courses SET current_enrollment = current_enrollment + #{delta}, updated_at = CURRENT_TIMESTAMP WHERE id = #{id}
+    </update>
+</mapper>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.upper6.studentcourse.mapper.SemesterMapper">
+
+    <resultMap id="BaseResultMap" type="com.upper6.studentcourse.model.entity.Semester">
+        <id column="id" property="id"/>
+        <result column="semester" property="semester"/>
+        <result column="name" property="name"/>
+        <result column="start_date" property="startDate"/>
+        <result column="end_date" property="endDate"/>
+        <result column="selection_start" property="selectionStart"/>
+        <result column="selection_end" property="selectionEnd"/>
+        <result column="is_current" property="isCurrent"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+    </resultMap>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT id, semester, name, start_date, end_date, selection_start, selection_end, is_current, created_at, updated_at
+        FROM semesters ORDER BY semester DESC
+    </select>
+    <select id="selectBySemester" resultMap="BaseResultMap">
+        SELECT id, semester, name, start_date, end_date, selection_start, selection_end, is_current, created_at, updated_at
+        FROM semesters WHERE semester = #{semester}
+    </select>
+    <select id="selectCurrent" resultMap="BaseResultMap">
+        SELECT id, semester, name, start_date, end_date, selection_start, selection_end, is_current, created_at, updated_at
+        FROM semesters WHERE is_current = TRUE LIMIT 1
+    </select>
+</mapper>

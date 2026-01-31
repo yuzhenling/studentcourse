@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.upper6.studentcourse.mapper.StatsMapper">
+
+    <resultMap id="DeptCountMap" type="com.upper6.studentcourse.model.dto.StatsDTO$DeptCount">
+        <result column="department" property="department"/>
+        <result column="count" property="count"/>
+    </resultMap>
+    <resultMap id="YearCountMap" type="com.upper6.studentcourse.model.dto.StatsDTO$YearCount">
+        <result column="year" property="year"/>
+        <result column="count" property="count"/>
+    </resultMap>
+    <resultMap id="TeacherCourseCountMap" type="com.upper6.studentcourse.model.dto.StatsDTO$TeacherCourseCount">
+        <result column="teacher_id" property="teacherId"/>
+        <result column="teacher_name" property="teacherName"/>
+        <result column="count" property="count"/>
+    </resultMap>
+    <resultMap id="PassRateMap" type="com.upper6.studentcourse.model.dto.StatsDTO$PassRate">
+        <result column="total" property="total"/>
+        <result column="passed" property="passed"/>
+        <result column="rate" property="rate"/>
+    </resultMap>
+    <resultMap id="PassRateItemMap" type="com.upper6.studentcourse.model.dto.StatsDTO$PassRateItem">
+        <result column="name" property="name"/>
+        <result column="total" property="total"/>
+        <result column="passed" property="passed"/>
+        <result column="rate" property="rate"/>
+    </resultMap>
+    <resultMap id="PassRateByCourseMap" type="com.upper6.studentcourse.model.dto.StatsDTO$PassRateByCourse">
+        <result column="course_id" property="courseId"/>
+        <result column="course_name" property="courseName"/>
+        <result column="total" property="total"/>
+        <result column="passed" property="passed"/>
+        <result column="rate" property="rate"/>
+    </resultMap>
+
+    <select id="countCoursesByDepartment" resultMap="DeptCountMap">
+        SELECT COALESCE(t.department, '未设置') AS department, COUNT(c.id) AS count
+        FROM courses c
+        LEFT JOIN teachers t ON c.teacher_id = t.id
+        GROUP BY t.department
+        ORDER BY count DESC
+    </select>
+
+    <select id="countStudentsByYear" resultMap="YearCountMap">
+        SELECT enrollment_year AS year, COUNT(*) AS count
+        FROM students
+        WHERE enrollment_year IS NOT NULL
+        GROUP BY enrollment_year
+        ORDER BY enrollment_year DESC
+    </select>
+
+    <select id="countCoursesByTeacher" resultMap="TeacherCourseCountMap">
+        SELECT c.teacher_id, t.name AS teacher_name, COUNT(c.id) AS count
+        FROM courses c
+        LEFT JOIN teachers t ON c.teacher_id = t.id
+        WHERE c.teacher_id IS NOT NULL
+        GROUP BY c.teacher_id, t.name
+        ORDER BY count DESC
+    </select>
+
+    <select id="passRateOverall" resultMap="PassRateMap">
+        SELECT
+            COUNT(*) AS total,
+            SUM(CASE WHEN g.is_passed = TRUE THEN 1 ELSE 0 END) AS passed,
+            CASE WHEN COUNT(*) > 0 THEN ROUND(100.0 * SUM(CASE WHEN g.is_passed = TRUE THEN 1 ELSE 0 END) / COUNT(*), 2) ELSE 0 END AS rate
+        FROM grades g
+        WHERE g.published = TRUE
+    </select>
+
+    <select id="passRateByDepartment" resultMap="PassRateItemMap">
+        SELECT
+            COALESCE(t.department, '未设置') AS name,
+            COUNT(*) AS total,
+            SUM(CASE WHEN g.is_passed = TRUE THEN 1 ELSE 0 END) AS passed,
+            CASE WHEN COUNT(*) > 0 THEN ROUND(100.0 * SUM(CASE WHEN g.is_passed = TRUE THEN 1 ELSE 0 END) / COUNT(*), 2) ELSE 0 END AS rate
+        FROM grades g
+        JOIN course_selections cs ON g.selection_id = cs.id
+        JOIN courses c ON cs.course_id = c.id
+        LEFT JOIN teachers t ON c.teacher_id = t.id
+        WHERE g.published = TRUE
+        GROUP BY t.department
+        ORDER BY total DESC
+    </select>
+
+    <select id="passRateByTeacher" resultMap="PassRateItemMap">
+        SELECT
+            t.name AS name,
+            COUNT(*) AS total,
+            SUM(CASE WHEN g.is_passed = TRUE THEN 1 ELSE 0 END) AS passed,
+            CASE WHEN COUNT(*) > 0 THEN ROUND(100.0 * SUM(CASE WHEN g.is_passed = TRUE THEN 1 ELSE 0 END) / COUNT(*), 2) ELSE 0 END AS rate
+        FROM grades g
+        JOIN course_selections cs ON g.selection_id = cs.id
+        JOIN courses c ON cs.course_id = c.id
+        LEFT JOIN teachers t ON c.teacher_id = t.id
+        WHERE g.published = TRUE AND c.teacher_id IS NOT NULL
+        GROUP BY c.teacher_id, t.name
+        ORDER BY total DESC
+    </select>
+
+    <select id="passRateByTeacherId" resultMap="PassRateMap">
+        SELECT
+            COUNT(*) AS total,
+            SUM(CASE WHEN g.is_passed = TRUE THEN 1 ELSE 0 END) AS passed,
+            CASE WHEN COUNT(*) > 0 THEN ROUND(100.0 * SUM(CASE WHEN g.is_passed = TRUE THEN 1 ELSE 0 END) / COUNT(*), 2) ELSE 0 END AS rate
+        FROM grades g
+        JOIN course_selections cs ON g.selection_id = cs.id
+        JOIN courses c ON cs.course_id = c.id AND c.teacher_id = #{teacherId}
+        WHERE g.published = TRUE
+    </select>
+
+    <select id="passRateByTeacherIdGroupByCourse" resultMap="PassRateByCourseMap">
+        SELECT
+            c.id AS course_id,
+            c.course_name AS course_name,
+            COUNT(*) AS total,
+            SUM(CASE WHEN g.is_passed = TRUE THEN 1 ELSE 0 END) AS passed,
+            CASE WHEN COUNT(*) > 0 THEN ROUND(100.0 * SUM(CASE WHEN g.is_passed = TRUE THEN 1 ELSE 0 END) / COUNT(*), 2) ELSE 0 END AS rate
+        FROM grades g
+        JOIN course_selections cs ON g.selection_id = cs.id
+        JOIN courses c ON cs.course_id = c.id AND c.teacher_id = #{teacherId}
+        WHERE g.published = TRUE
+        GROUP BY c.id, c.course_name
+        ORDER BY total DESC
+    </select>
+</mapper>
